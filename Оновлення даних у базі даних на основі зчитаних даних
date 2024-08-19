@@ -1,0 +1,47 @@
+ // Отримання даних з бази даних
+        $query = $this->db->query("SELECT category_id, parent_id, allegro_query, image FROM " . DB_PREFIX . "allegro_category");
+
+        $filename = 'D:\moto.csv';
+
+// Відкриття файлу для читання
+        $file = fopen($filename, 'r');
+
+        if ($file) {
+            $fileData = [];
+
+            // Читання даних з файлу
+            while (($line = fgets($file)) !== FALSE) {
+                $lineData = explode(',', trim($line));
+
+                if (count($lineData) >= 2) {
+                    $fileData[] = [
+                        'allegro_query' => $lineData[6],
+                        'image' => $lineData[0],
+                        'category_id' => $lineData[1],
+                        'parent_id' => $lineData[2]
+                    ];
+                }
+            }
+
+            fclose($file);
+
+            // Оновлення даних у базі даних на основі зчитаних даних
+            foreach ($fileData as $fileRow) {
+                // Формування SQL-запиту для оновлення даних
+                $sql = "UPDATE " . DB_PREFIX . "allegro_category
+                SET image = '" . $this->db->escape($fileRow['image']) . "'
+                WHERE allegro_query = '" . $this->db->escape($fileRow['allegro_query']) . "'
+                AND category_id = '" . (int)$fileRow['category_id'] . "'
+                AND parent_id = '" . (int)$fileRow['parent_id'] . "'";
+
+                // Виконання SQL-запиту
+                $this->db->query($sql);
+            }
+
+    echo 'Database has been updated based on the CSV file.';
+} else {
+    echo 'Error opening file for reading';
+}
+
+}
+}
